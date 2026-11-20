@@ -14,6 +14,8 @@ target_include_directories(physics
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+target_compile_options(physics PRIVATE -march=native)
+
 target_link_libraries(physics
         PUBLIC glm::glm
         PRIVATE config

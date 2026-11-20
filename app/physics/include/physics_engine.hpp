@@ -18,8 +18,8 @@ namespace Physics {
         void update(glm::vec2 mouse_position);
 
         [[nodiscard]] std::size_t particle_count() const { return current_.size(); }
-        [[nodiscard]] std::span<const float> positions_x() const { return current_.pos_x; }
-        [[nodiscard]] std::span<const float> positions_y() const { return current_.pos_y; }
+        [[nodiscard]] std::span<const float> positions_x() const { return std::span(current_.pos_x).first(current_.size()); }
+        [[nodiscard]] std::span<const float> positions_y() const { return std::span(current_.pos_y).first(current_.size()); }
 
     private:
         PhysicsEngine() = default;

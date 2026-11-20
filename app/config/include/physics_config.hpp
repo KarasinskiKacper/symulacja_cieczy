@@ -18,7 +18,7 @@ namespace Config {
     constexpr float DT = 0.005f;
     constexpr float VISCOSITY = 5000.0f;
     constexpr float COLLISIONS_DAMPING = -0.3f;
-    constexpr float COLLISION_RELAXATION = 0.5f;
+    constexpr float COLLISION_RELAXATION = 0.25f;
 
     // Modified simulation parameters for a "thin water" effect
     // constexpr float REST_DENSITY = 250.0f;

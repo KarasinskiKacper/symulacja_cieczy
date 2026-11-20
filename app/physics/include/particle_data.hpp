@@ -9,25 +9,28 @@ namespace Physics {
     using FloatArray = std::vector<float, AlignedAllocator<float>>;
 
     struct ParticleData {
+        static constexpr std::size_t PADDING = 16;
+        static constexpr float DEAD_POSITION = 1e9f;
+
         FloatArray pos_x;
         FloatArray pos_y;
         FloatArray vel_x;
         FloatArray vel_y;
+        std::size_t count = 0;
 
-        [[nodiscard]] std::size_t size() const { return pos_x.size(); }
+        [[nodiscard]] std::size_t size() const { return count; }
+        [[nodiscard]] std::size_t padded_size() const { return pos_x.size(); }
 
-        void push_back(const float x, const float y) {
-            pos_x.push_back(x);
-            pos_y.push_back(y);
-            vel_x.push_back(0.0f);
-            vel_y.push_back(0.0f);
+        [[nodiscard]] static constexpr std::size_t padded(const std::size_t n) {
+            return (n + PADDING - 1) / PADDING * PADDING;
         }
 
-        void resize(const std::size_t count) {
-            pos_x.resize(count);
-            pos_y.resize(count);
-            vel_x.resize(count);
-            vel_y.resize(count);
+        void reset(const std::size_t new_count) {
+            count = new_count;
+            pos_x.assign(padded(new_count), DEAD_POSITION);
+            pos_y.assign(padded(new_count), DEAD_POSITION);
+            vel_x.assign(padded(new_count), 0.0f);
+            vel_y.assign(padded(new_count), 0.0f);
         }
     };
 }
