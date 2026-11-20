@@ -24,6 +24,9 @@ namespace Physics {
         [[nodiscard]] std::span<const float> positions_y() const { return std::span(current_.pos_y).first(current_.size()); }
 
     private:
+        static constexpr int CHUNK_SIZE = 64;
+        static_assert(CHUNK_SIZE % ParticleData::PADDING == 0);
+
         PhysicsEngine() = default;
         ~PhysicsEngine() = default;
 
@@ -37,5 +40,7 @@ namespace Physics {
         FloatArray density_;
         FloatArray inverse_density_;
         FloatArray pressure_;
+
+        int thread_count_ = 1;
     };
 }

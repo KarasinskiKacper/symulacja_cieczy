@@ -1,4 +1,5 @@
 find_package(glm REQUIRED)
+find_package(OpenMP REQUIRED)
 
 file(GLOB_RECURSE PHYSICS_SOURCES CONFIGURE_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*
@@ -18,5 +19,7 @@ target_compile_options(physics PRIVATE -march=native)
 
 target_link_libraries(physics
         PUBLIC glm::glm
-        PRIVATE config
+        PRIVATE
+            config
+            OpenMP::OpenMP_CXX
 )

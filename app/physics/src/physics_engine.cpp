@@ -2,8 +2,11 @@
 
 #include <physics_config.hpp>
 
+#include <omp.h>
+
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <experimental/simd>
 #include <numbers>
 #include <utility>
@@ -46,6 +49,8 @@ void PhysicsEngine::init_particles() {
     density_.assign(current_.padded_size(), 1.0f);
     inverse_density_.assign(current_.padded_size(), 1.0f);
     pressure_.assign(current_.padded_size(), 0.0f);
+
+    thread_count_ = std::getenv("OMP_NUM_THREADS") ? omp_get_max_threads() : std::max(1, omp_get_num_procs() - 1);
 }
 
 void PhysicsEngine::compute_density_pressure() {
@@ -61,6 +66,7 @@ void PhysicsEngine::compute_density_pressure() {
 
     const floatv hsq = Config::HSQ;
 
+    #pragma omp parallel for schedule(dynamic, CHUNK_SIZE) num_threads(thread_count_)
     for (std::size_t i = 0; i < count; ++i) {
         const floatv xi = pos_x[i];
         const floatv yi = pos_y[i];
@@ -114,6 +120,7 @@ void PhysicsEngine::integrate(const glm::vec2 mouse_position) {
     const floatv h = Config::H;
     const floatv min_distance = 0.001f;
 
+    #pragma omp parallel for schedule(dynamic, CHUNK_SIZE) num_threads(thread_count_)
     for (std::size_t i = 0; i < count; ++i) {
         glm::vec2 position(pos_x[i], pos_y[i]);
         glm::vec2 velocity(vel_x[i], vel_y[i]);
@@ -203,6 +210,7 @@ void PhysicsEngine::resolve_collisions() {
     const floatv epsilon = 0.001f;
     const floatv zero = 0.0f;
 
+    #pragma omp parallel for schedule(dynamic, CHUNK_SIZE) num_threads(thread_count_)
     for (std::size_t i = 0; i < count; ++i) {
         const glm::vec2 position_i(pos_x[i], pos_y[i]);
         const glm::vec2 velocity_i(vel_x[i], vel_y[i]);

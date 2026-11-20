@@ -22,7 +22,7 @@ namespace {
             physics.update(mouse_position.load(std::memory_order_relaxed));
             const float physics_time = std::chrono::duration<float>(clock::now() - physics_start).count();
 
-            Physics::RenderFrame& frame = exchange.back();
+            Physics::RenderFrame& frame = exchange.physics();
             physics.write_frame(frame);
             frame.step = ++step;
             frame.physics_time = physics_time;

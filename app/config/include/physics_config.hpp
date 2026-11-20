@@ -9,7 +9,7 @@ namespace Config {
     constexpr float GRAVITY = 9.81f * 100.0f;
 
     constexpr float PARTICLE_RADIUS = 4.0f;
-    constexpr float PARTICLE_SPACING = PARTICLE_RADIUS  * 1.5f;
+    constexpr float PARTICLE_SPACING = PARTICLE_RADIUS  * 1.0f;
     constexpr float REST_DENSITY = 1.0f;
     constexpr float MASS = REST_DENSITY * PARTICLE_SPACING * PARTICLE_SPACING * 10;
     constexpr float GAS_CONST = 2000.0f;
