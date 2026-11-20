@@ -18,8 +18,8 @@ int main() {
         physics.update(mouse_position);
         const float physics_time = std::chrono::duration<float>(std::chrono::steady_clock::now() - physics_start).count();
 
-        renderer.update_stats(physics_time, physics.get_particles().size());
-        renderer.render(physics.get_particles(), mouse_position);
+        renderer.update_stats(physics_time, physics.particle_count());
+        renderer.render(physics.positions_x(), physics.positions_y(), mouse_position);
     }
 
     return 0;
