@@ -1,17 +1,12 @@
 #pragma once
 
+#include "particle_data.hpp"
+
 #include <glm/glm.hpp>
-#include <vector>
+#include <cstddef>
+#include <span>
 
 namespace Physics {
-    struct Particle {
-        glm::vec2 position;
-        glm::vec2 velocity;
-        glm::vec2 force;
-        float density;
-        float pressure;
-    };
-
     class PhysicsEngine {
     public:
         static PhysicsEngine& instance();
@@ -22,7 +17,9 @@ namespace Physics {
         void init_particles();
         void update(glm::vec2 mouse_position);
 
-        [[nodiscard]] const std::vector<Particle>& get_particles() const { return particles_; }
+        [[nodiscard]] std::size_t particle_count() const { return particles_.size(); }
+        [[nodiscard]] std::span<const float> positions_x() const { return particles_.pos_x; }
+        [[nodiscard]] std::span<const float> positions_y() const { return particles_.pos_y; }
 
     private:
         PhysicsEngine() = default;
@@ -31,6 +28,6 @@ namespace Physics {
         void compute_density_pressure();
         void compute_forces();
 
-        std::vector<Particle> particles_;
+        ParticleData particles_;
     };
 }

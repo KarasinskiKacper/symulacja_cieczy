@@ -78,14 +78,14 @@ void Renderer::update_stats(const float physics_time, const std::size_t particle
     }
 }
 
-void Renderer::render(const std::vector<Physics::Particle>& particles, glm::vec2 mouse_position) {
+void Renderer::render(const std::span<const float> positions_x, const std::span<const float> positions_y, const glm::vec2 mouse_position) {
     window_.clear(Config::BACKGROUND_COLOR);
 
     window_.draw(container_);
 
     // Draw particles
-    for (const auto& particle : particles) {
-        particle_shape_.setPosition(particle.position.x, particle.position.y);
+    for (std::size_t i = 0; i < positions_x.size(); ++i) {
+        particle_shape_.setPosition(positions_x[i], positions_y[i]);
         window_.draw(particle_shape_);
     }
 

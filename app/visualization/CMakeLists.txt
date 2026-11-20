@@ -1,4 +1,5 @@
 find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+find_package(glm REQUIRED)
 
 file(GLOB_RECURSE VISUALIZATION_SOURCES CONFIGURE_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*
@@ -19,7 +20,7 @@ target_link_libraries(visualization
             sfml-graphics
             sfml-window
             sfml-system
-            physics
+            glm::glm
         PRIVATE
             config
 )

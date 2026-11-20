@@ -1,12 +1,10 @@
 #pragma once
 
-#include <physics_engine.hpp>
-
 #include <SFML/Graphics.hpp>
 #include <glm/glm.hpp>
 
 #include <cstddef>
-#include <vector>
+#include <span>
 
 namespace Visualization {
     class Renderer {
@@ -24,7 +22,7 @@ namespace Visualization {
 
         void update_stats(float physics_time, std::size_t particle_count);
 
-        void render(const std::vector<Physics::Particle>& particles, glm::vec2 mouse_position);
+        void render(std::span<const float> positions_x, std::span<const float> positions_y, glm::vec2 mouse_position);
 
     private:
         Renderer();
