@@ -33,6 +33,7 @@ namespace Physics {
         ParticleData next_;
 
         FloatArray density_;
+        FloatArray inverse_density_;
         FloatArray pressure_;
     };
 }

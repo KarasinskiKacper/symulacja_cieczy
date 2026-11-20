@@ -44,6 +44,7 @@ void PhysicsEngine::init_particles() {
     }
 
     density_.assign(current_.padded_size(), 1.0f);
+    inverse_density_.assign(current_.padded_size(), 1.0f);
     pressure_.assign(current_.padded_size(), 0.0f);
 }
 
@@ -55,6 +56,7 @@ void PhysicsEngine::compute_density_pressure() {
     const float* __restrict pos_x = current_.pos_x.data();
     const float* __restrict pos_y = current_.pos_y.data();
     float* __restrict density = density_.data();
+    float* __restrict inverse_density = inverse_density_.data();
     float* __restrict pressure = pressure_.data();
 
     const floatv hsq = Config::HSQ;
@@ -80,6 +82,7 @@ void PhysicsEngine::compute_density_pressure() {
 
         const float density_sum = Config::MASS * poly6 * stdx::reduce(kernel_sum);
         density[i] = density_sum;
+        inverse_density[i] = 1.0f / density_sum;
         pressure[i] = std::max(0.0f, Config::GAS_CONST * (density_sum - Config::REST_DENSITY));
     }
 }
@@ -101,6 +104,7 @@ void PhysicsEngine::integrate(const glm::vec2 mouse_position) {
     const float* __restrict vel_x = current_.vel_x.data();
     const float* __restrict vel_y = current_.vel_y.data();
     const float* __restrict density = density_.data();
+    const float* __restrict inverse_density = inverse_density_.data();
     const float* __restrict pressure = pressure_.data();
     float* __restrict next_pos_x = next_.pos_x.data();
     float* __restrict next_pos_y = next_.pos_y.data();
@@ -129,13 +133,13 @@ void PhysicsEngine::integrate(const glm::vec2 mouse_position) {
             floatv vxj;
             floatv vyj;
             floatv pj;
-            floatv dj;
+            floatv inverse_density_j;
             xj.copy_from(pos_x + j, stdx::vector_aligned);
             yj.copy_from(pos_y + j, stdx::vector_aligned);
             vxj.copy_from(vel_x + j, stdx::vector_aligned);
             vyj.copy_from(vel_y + j, stdx::vector_aligned);
             pj.copy_from(pressure + j, stdx::vector_aligned);
-            dj.copy_from(density + j, stdx::vector_aligned);
+            inverse_density_j.copy_from(inverse_density + j, stdx::vector_aligned);
 
             const floatv dx = xj - xi;
             const floatv dy = yj - yi;
@@ -145,7 +149,6 @@ void PhysicsEngine::integrate(const glm::vec2 mouse_position) {
             stdx::where(!(distance < h && distance > min_distance), distance_term) = 0.0f;
 
             const floatv inverse_distance = 1.0f / stdx::max(distance, min_distance);
-            const floatv inverse_density_j = 1.0f / dj;
 
             const floatv pressure_weight = pressure_coefficient * (pi + pj) * inverse_density_j * distance_term * distance_term * inverse_distance;
             const floatv viscosity_weight = viscosity_coefficient * inverse_density_j * distance_term;
@@ -183,7 +186,10 @@ void PhysicsEngine::integrate(const glm::vec2 mouse_position) {
 void PhysicsEngine::resolve_collisions() {
     constexpr float min_distance = Config::PARTICLE_RADIUS * 2.0f;
 
+    constexpr float impulse_factor = (1.0f + 0.2f) / 2.0f;
+
     const std::size_t count = current_.size();
+    const std::size_t padded_count = current_.padded_size();
     const float* __restrict pos_x = current_.pos_x.data();
     const float* __restrict pos_y = current_.pos_y.data();
     const float* __restrict vel_x = current_.vel_x.data();
@@ -193,37 +199,57 @@ void PhysicsEngine::resolve_collisions() {
     float* __restrict next_vel_x = next_.vel_x.data();
     float* __restrict next_vel_y = next_.vel_y.data();
 
+    const floatv contact_distance = min_distance;
+    const floatv epsilon = 0.001f;
+    const floatv zero = 0.0f;
+
     for (std::size_t i = 0; i < count; ++i) {
         const glm::vec2 position_i(pos_x[i], pos_y[i]);
         const glm::vec2 velocity_i(vel_x[i], vel_y[i]);
 
         // Jacobi: corrections from all neighbors are computed from the old state and summed.
         // Neighbor j computes the same pair with the opposite sign, so momentum is conserved.
-        glm::vec2 position_correction(0.0f);
-        glm::vec2 velocity_correction(0.0f);
+        const floatv xi = pos_x[i];
+        const floatv yi = pos_y[i];
+        const floatv vxi = vel_x[i];
+        const floatv vyi = vel_y[i];
+        floatv push_x = 0.0f;
+        floatv push_y = 0.0f;
+        floatv impulse_x = 0.0f;
+        floatv impulse_y = 0.0f;
 
-        for (std::size_t j = 0; j < count; ++j) {
-            if (i == j) continue;
+        for (std::size_t j = 0; j < padded_count; j += floatv::size()) {
+            floatv xj;
+            floatv yj;
+            floatv vxj;
+            floatv vyj;
+            xj.copy_from(pos_x + j, stdx::vector_aligned);
+            yj.copy_from(pos_y + j, stdx::vector_aligned);
+            vxj.copy_from(vel_x + j, stdx::vector_aligned);
+            vyj.copy_from(vel_y + j, stdx::vector_aligned);
 
-            glm::vec2 delta = glm::vec2(pos_x[j], pos_y[j]) - position_i;
+            const floatv dx = xj - xi;
+            const floatv dy = yj - yi;
+            const floatv distance = stdx::sqrt(dx * dx + dy * dy);
 
-            if (float distance = glm::length(delta); distance < min_distance && distance > 0.001f) {
-                glm::vec2 normal = delta / distance;
-                const float overlap = min_distance - distance;
+            floatv inverse_distance = 1.0f / stdx::max(distance, epsilon);
+            stdx::where(!(distance < contact_distance && distance > epsilon), inverse_distance) = 0.0f;
 
-                position_correction -= normal * (overlap * 0.5f);
+            const floatv normal_x = dx * inverse_distance;
+            const floatv normal_y = dy * inverse_distance;
+            const floatv overlap = contact_distance - distance;
 
-                glm::vec2 relative_velocity = glm::vec2(vel_x[j], vel_y[j]) - velocity_i;
+            const floatv velocity_along_normal = (vxj - vxi) * normal_x + (vyj - vyi) * normal_y;
+            const floatv approach = stdx::min(velocity_along_normal, zero);
 
-                if (
-                    const float velocity_along_normal = glm::dot(relative_velocity, normal);
-                    velocity_along_normal < 0
-                ) {
-                    const float impulse_scalar = -(1.0f + 0.2f) * velocity_along_normal / 2.0f;
-                    velocity_correction -= impulse_scalar * normal;
-                }
-            }
+            push_x += normal_x * overlap;
+            push_y += normal_y * overlap;
+            impulse_x += normal_x * approach;
+            impulse_y += normal_y * approach;
         }
+
+        const glm::vec2 position_correction = -0.5f * glm::vec2(stdx::reduce(push_x), stdx::reduce(push_y));
+        const glm::vec2 velocity_correction = impulse_factor * glm::vec2(stdx::reduce(impulse_x), stdx::reduce(impulse_y));
 
         glm::vec2 position = position_i + Config::COLLISION_RELAXATION * position_correction;
         glm::vec2 velocity = velocity_i + Config::COLLISION_RELAXATION * velocity_correction;
