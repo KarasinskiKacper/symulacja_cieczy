@@ -289,4 +289,10 @@ void PhysicsEngine::update(const glm::vec2 mouse_position) {
     std::swap(current_, next_);
 }
 
+void PhysicsEngine::write_frame(RenderFrame& frame) const {
+    const std::size_t count = current_.size();
+    frame.x.assign(current_.pos_x.begin(), current_.pos_x.begin() + static_cast<std::ptrdiff_t>(count));
+    frame.y.assign(current_.pos_y.begin(), current_.pos_y.begin() + static_cast<std::ptrdiff_t>(count));
+}
+
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "frame_exchange.hpp"
 #include "particle_data.hpp"
 
 #include <glm/glm.hpp>
@@ -16,6 +17,7 @@ namespace Physics {
 
         void init_particles();
         void update(glm::vec2 mouse_position);
+        void write_frame(RenderFrame& frame) const;
 
         [[nodiscard]] std::size_t particle_count() const { return current_.size(); }
         [[nodiscard]] std::span<const float> positions_x() const { return std::span(current_.pos_x).first(current_.size()); }

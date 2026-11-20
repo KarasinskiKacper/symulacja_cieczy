@@ -57,7 +57,7 @@ glm::vec2 Renderer::get_mouse_position() const {
     return {static_cast<float>(sf_mouse_position.x), static_cast<float>(sf_mouse_position.y)};
 }
 
-void Renderer::update_stats(const float physics_time, const std::size_t particle_count) {
+void Renderer::update_stats(const float physics_time, const std::uint64_t physics_step, const std::size_t particle_count) {
     physics_time_sum_ += physics_time;
     ++frames_counted_;
 
@@ -67,13 +67,16 @@ void Renderer::update_stats(const float physics_time, const std::size_t particle
         stats_elapsed >= 0.5f
     ) {
         char buffer[128];
-        std::snprintf(buffer, sizeof(buffer), "FPS: %.1f\nFizyka: %.2f ms\nCzasteczki: %zu",
+        const std::uint64_t steps_counted = physics_step - last_physics_step_;
+        std::snprintf(buffer, sizeof(buffer), "FPS: %.1f\nFizyka: %.2f ms\nKroki/s: %.1f\nCzasteczki: %zu",
                       static_cast<double>(static_cast<float>(frames_counted_) / stats_elapsed),
                       static_cast<double>(physics_time_sum_ / static_cast<float>(frames_counted_) * 1000.0f),
+                      static_cast<double>(static_cast<float>(steps_counted) / stats_elapsed),
                       particle_count);
         stats_text_.setString(buffer);
         frames_counted_ = 0;
         physics_time_sum_ = 0.0f;
+        last_physics_step_ = physics_step;
         stats_clock_.restart();
     }
 }

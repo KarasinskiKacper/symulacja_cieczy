@@ -34,9 +34,13 @@ add_subdirectory(visualization)
 set(SOURCES main.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
+find_package(Threads REQUIRED)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
+        config
         physics
         visualization
+        Threads::Threads
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

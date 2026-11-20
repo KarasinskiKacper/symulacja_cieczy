@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <span>
 
 namespace Visualization {
@@ -20,7 +21,7 @@ namespace Visualization {
 
         glm::vec2 get_mouse_position() const;
 
-        void update_stats(float physics_time, std::size_t particle_count);
+        void update_stats(float physics_time, std::uint64_t physics_step, std::size_t particle_count);
 
         void render(std::span<const float> positions_x, std::span<const float> positions_y, glm::vec2 mouse_position);
 
@@ -40,5 +41,6 @@ namespace Visualization {
         sf::Clock stats_clock_;
         int frames_counted_ = 0;
         float physics_time_sum_ = 0.0f;
+        std::uint64_t last_physics_step_ = 0;
     };
 }

@@ -20,6 +20,8 @@ namespace Config {
     constexpr float COLLISIONS_DAMPING = -0.3f;
     constexpr float COLLISION_RELAXATION = 0.25f;
 
+    constexpr bool PHYSICS_REAL_TIME = true;
+
     // Modified simulation parameters for a "thin water" effect
     // constexpr float REST_DENSITY = 250.0f;
     // constexpr float GAS_CONST = 5000.0f;
