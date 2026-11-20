@@ -8,13 +8,11 @@
 namespace Physics {
     using FloatArray = std::vector<float, AlignedAllocator<float>>;
 
-    // Particle state in SoA layout: every field is a separate, contiguous, 64 B aligned array.
-    // Particle i is described by the i-th element of each array.
     struct ParticleData {
-        FloatArray pos_x, pos_y;
-        FloatArray vel_x, vel_y;
-        FloatArray force_x, force_y;
-        FloatArray density, pressure;
+        FloatArray pos_x;
+        FloatArray pos_y;
+        FloatArray vel_x;
+        FloatArray vel_y;
 
         [[nodiscard]] std::size_t size() const { return pos_x.size(); }
 
@@ -23,10 +21,13 @@ namespace Physics {
             pos_y.push_back(y);
             vel_x.push_back(0.0f);
             vel_y.push_back(0.0f);
-            force_x.push_back(0.0f);
-            force_y.push_back(0.0f);
-            density.push_back(0.0f);
-            pressure.push_back(0.0f);
+        }
+
+        void resize(const std::size_t count) {
+            pos_x.resize(count);
+            pos_y.resize(count);
+            vel_x.resize(count);
+            vel_y.resize(count);
         }
     };
 }

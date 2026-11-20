@@ -17,17 +17,22 @@ namespace Physics {
         void init_particles();
         void update(glm::vec2 mouse_position);
 
-        [[nodiscard]] std::size_t particle_count() const { return particles_.size(); }
-        [[nodiscard]] std::span<const float> positions_x() const { return particles_.pos_x; }
-        [[nodiscard]] std::span<const float> positions_y() const { return particles_.pos_y; }
+        [[nodiscard]] std::size_t particle_count() const { return current_.size(); }
+        [[nodiscard]] std::span<const float> positions_x() const { return current_.pos_x; }
+        [[nodiscard]] std::span<const float> positions_y() const { return current_.pos_y; }
 
     private:
         PhysicsEngine() = default;
         ~PhysicsEngine() = default;
 
         void compute_density_pressure();
-        void compute_forces();
+        void integrate(glm::vec2 mouse_position);
+        void resolve_collisions();
 
-        ParticleData particles_;
+        ParticleData current_;
+        ParticleData next_;
+
+        FloatArray density_;
+        FloatArray pressure_;
     };
 }
